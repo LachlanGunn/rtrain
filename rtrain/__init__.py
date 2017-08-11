@@ -56,7 +56,7 @@ def deserialize_model(model_json):
     return model
 
 
-def _serialize_training_job(model, loss, optimizer, x_train, y_train, epochs):
+def _serialize_training_job(model, loss, optimizer, x_train, y_train, epochs, batch_size):
     architecture = model.to_json()
     weights = model.get_weights()
 
@@ -67,15 +67,15 @@ def _serialize_training_job(model, loss, optimizer, x_train, y_train, epochs):
              'loss': loss, 'optimizer': optimizer,
              'x_train': _serialize_array(x_train), 'y_train': _serialize_array(y_train),
              'x_train_shape': x_train.shape, 'y_train_shape': y_train.shape,
-             'epochs': epochs})
+             'epochs': epochs, 'batch_size': batch_size})
 
 
-def train(url, model, loss, optimizer, x_train, y_train, epochs, quiet=False):
+def train(url, model, loss, optimizer, x_train, y_train, epochs, batch_size, quiet=False):
     """Train a model on a remote server."""
     global progressbar_type
     global notebook
 
-    serialized_model = _serialize_training_job(model, loss, optimizer, x_train, y_train, epochs)
+    serialized_model = _serialize_training_job(model, loss, optimizer, x_train, y_train, epochs, batch_size)
     response = requests.post("%s/train" % url, json=serialized_model)
     job_id = response.text
 

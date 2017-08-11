@@ -50,7 +50,8 @@ def execute_training_request(training_job, callback):
     print(training_job['y_train_shape'])
     print(y_train.shape)
 
-    model.fit(x_train, y_train, epochs=training_job['epochs'], callbacks=[callback], verbose=0)
+    model.fit(x_train, y_train, epochs=training_job['epochs'], callbacks=[callback], verbose=0,
+              batch_size=training_job['batch_size'])
     return serialize_model(model)
 
 

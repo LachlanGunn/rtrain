@@ -31,6 +31,7 @@ schema = {
         "x_train_shape": {"type": "array", "items": {"type": "integer", "minimum": 1}},
         "y_train_shape": {"type": "array", "items": {"type": "integer", "minimum": 1}},
         "epochs": {"type": "integer"},
+        "batch_size": {"type": "integer", "minimum": 1}
     }
 }
 
@@ -55,7 +56,7 @@ def validate_training_request(request):
     ...                            "loss": "mean_squared_error", "optimizer": "rmsprop",
     ...                             "x_train": [1,2,3], "y_train": [4,5,6],
     ...                             "x_train_shape": [3], "y_train_shape": [3],
-    ...                             "epochs": 10})
+    ...                             "epochs": 10, "batch_size": 1})
     True
 
     # Too many properties.
@@ -63,7 +64,7 @@ def validate_training_request(request):
     ...                            "loss": "mean_squared_error", "optimizer": "rmsprop",
     ...                             "x_train": [1,2,3], "y_train": [4,5,6],
     ...                             "x_train_shape": [3], "y_train_shape": [3],
-    ...                             "epochs": 10,
+    ...                             "epochs": 10, "batch_size": 1,
     ...                             "ham": False})
     False
     """
