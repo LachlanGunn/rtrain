@@ -92,9 +92,9 @@ def trainer():
         try:
             result = execute_training_request(training_request, callback)
             _database_operations.finish_job(job_id, result, database)
-        except:
+        except Exception as e:
             _database_operations.update_status(job_id, -1, database)
-            _database_operations.finish_job(job_id, '', database)
+            _database_operations.finish_job(job_id, str(e), database)
 
 
 @app.route("/train", methods=['POST'])
