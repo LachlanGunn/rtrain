@@ -31,7 +31,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'rtrain-setup=rtrain.setup_db:main',
+            'rtraind-setup=rtrain.setup_db:main',
             'rtraind=rtrain.server:main',
         ],
     }
