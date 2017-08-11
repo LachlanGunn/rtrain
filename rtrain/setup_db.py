@@ -3,8 +3,9 @@
 import pkg_resources
 import sqlite3
 import sys
+import rtrain.server_utils.database_operations as db
 
-database_path = 'U:/Source/rtrain/testdb.db'
+database_path = db.get_database_location()
 
 if __name__ == '__main__':
     connection = sqlite3.connect(database_path)

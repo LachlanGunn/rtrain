@@ -4,6 +4,11 @@ import base64
 import json
 import os
 
+
+def get_database_location():
+    return os.environ.get('DB_PATH', 'U:/Source/rtrain/testdb.db')
+
+
 __queries = {
     "create_job": """
         INSERT INTO Jobs

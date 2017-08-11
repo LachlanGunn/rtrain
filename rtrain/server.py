@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 
-import base64
 import flask
-import io
 import json
 import keras.models
-import numpy
 import sqlite3
 import sys
 import threading
@@ -17,7 +14,7 @@ import rtrain.server_utils.database_operations as _database_operations
 
 app = flask.Flask(__name__)
 
-database_path = 'U:/Source/rtrain/testdb.db'
+database_path = _database_operations.get_database_location()
 
 
 def get_db():
@@ -25,6 +22,7 @@ def get_db():
     if not hasattr(flask.g, 'sqlite_db'):
         flask.g.sqlite_db = sqlite3.connect(database_path)
     return flask.g.sqlite_db
+
 
 @app.teardown_appcontext
 def close_db(exception):
