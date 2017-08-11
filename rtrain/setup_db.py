@@ -7,7 +7,7 @@ import rtrain.server_utils.database_operations as db
 
 database_path = db.get_database_location()
 
-if __name__ == '__main__':
+def main():
     connection = sqlite3.connect(database_path)
     if connection is None:
         print("Could not connect to database.")
@@ -21,3 +21,6 @@ if __name__ == '__main__':
     cursor = connection.cursor()
     cursor.executescript(query)
     cursor.close()
+
+if __name__ == '__main__':
+    main()

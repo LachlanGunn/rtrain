@@ -124,7 +124,12 @@ def request_result(job_id):
     else:
         return status[0]
 
-if __name__ == '__main__':
+
+def main():
     worker = threading.Thread(target=trainer)
     worker.start()
     app.run()
+
+
+if __name__ == '__main__':
+    main()
