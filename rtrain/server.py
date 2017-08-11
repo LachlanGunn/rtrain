@@ -7,6 +7,7 @@ import sqlite3
 import sys
 import threading
 import time
+import traceback
 
 from . import serialize_model, _deserialize_array
 from .validation import validate_training_request
@@ -94,7 +95,7 @@ def trainer():
             _database_operations.finish_job(job_id, result, database)
         except Exception as e:
             _database_operations.update_status(job_id, -1, database)
-            _database_operations.finish_job(job_id, str(e), database)
+            _database_operations.finish_job(job_id, traceback.format_exc(e), database)
 
 
 @app.route("/train", methods=['POST'])
