@@ -47,9 +47,6 @@ def execute_training_request(training_job, callback):
     x_train = _deserialize_array(training_job['x_train'])
     y_train = _deserialize_array(training_job['y_train'])
 
-    print(training_job['y_train_shape'])
-    print(y_train.shape)
-
     model.fit(x_train, y_train, epochs=training_job['epochs'], callbacks=[callback], verbose=0,
               batch_size=training_job['batch_size'])
     return serialize_model(model)
@@ -71,7 +68,7 @@ class StatusCallback(keras.callbacks.Callback):
         self.samples_this_epoch += batch_size
 
         current_time = time.time()
-        if current_time - self.last_update > 0.1:
+        if current_time - self.last_update > 0.5:
             _database_operations.update_status(self.job_id, 100.0 * (float(self.samples_this_epoch)/self.params['samples'] + self.epochs_finished) / self.params['epochs'], self.db)
             self.last_update = current_time
 
