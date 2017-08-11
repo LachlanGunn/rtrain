@@ -5,9 +5,9 @@ ___This software is highly experimental.  Expect it to break at every
     opportunity.___
 
 The **rtrain** package is a Python package for remotely training Keras
-neural network models for Keras.  This allows scripts and notebooks to
-remain conveniently located on the user's desktop, with just the expensive
-training operation being offloaded.
+neural network models.  This allows scripts and notebooks to
+remain conveniently located on the user's local machine, with just the
+expensive training operation being offloaded to distant lands.
 
 This approach has some advantages:
 
