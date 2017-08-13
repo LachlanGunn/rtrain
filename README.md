@@ -18,8 +18,8 @@ This approach has some advantages:
  - _Compared to a remote Jupyter Notebook._  The notebook itself stays
     safely on the local machine.  This ensures that it is
     properly backed up and does not require the use of a relatively
-    expensive AWS instance in order to run the parts of the notebook
-    that do not require acceleration, which may be the vast majority.
+    expensive EC2 instance in order to run the parts of the notebook
+    that do not require GPU acceleration, which may be the vast majority.
     
 An example of the usage of the `rtrain` module is given in
 [`remote_train_example.py`](remote_train_example.py).
