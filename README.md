@@ -24,18 +24,18 @@ This approach has some advantages:
 An example of the usage of the `rtrain` module is given in
 [`remote_train_example.py`](remote_train_example.py).
 
-Building _rtrain_
+Installing _rtrain_
 -----------------
 
-Build and install the Python wheel file with
+Install _rtrain_ using `pip` or `pip3` depending on your Python
+environment:
 
 ```ShellSession
-rtrain$ python3 setup.py bdist_wheel
-rtrain$ sudo pip3 install dist/rtrain-0.0.1-py3-none-any.whl
+rtrain$ pip3 install git+https://github.com/LachlanGunn/rtrain
 ``` 
 
-This will install the `rtrain` python module, as well as the server-side
-applications.
+This will install the `rtrain` Python module, as well as the server-side
+applications, which will be installed into `PATH`.
 
 Using `rtraind`
 ---------------
