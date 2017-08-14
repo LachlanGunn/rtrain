@@ -78,10 +78,11 @@ by default `rtraind` will listen on port 5000.
 [`remote_train_example.py`](remote_train_example.py).*
 
 Normally one would train a model using `model.compile()` followed by
-`model.train()`.  These are replaced with a single function, `rtrain.train()`:
+`model.train()`.  These are replaced with a single function,
+`rtrain.client.train()`:
 
 ```python
->>> trained_model = rtrain.train("http://localhost:5000", model,
+>>> trained_model = rtrain.client.train("http://localhost:5000", model,
 ...     'mean_squared_error', 'rmsprop', x_train, y_train, 100, 128)       
 ``` 
 

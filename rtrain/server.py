@@ -9,7 +9,7 @@ import threading
 import time
 import traceback
 
-from . import serialize_model, _deserialize_array
+from rtrain.utils import deserialize_array, serialize_model
 from .validation import validate_training_request
 import rtrain.server_utils.database_operations as _database_operations
 
@@ -43,9 +43,9 @@ def execute_training_request(training_job, callback):
     model = keras.models.model_from_json(training_job['architecture'])
     model.compile(loss=training_job['loss'], optimizer=training_job['optimizer'])
 
-    model.set_weights([_deserialize_array(w) for w in training_job['weights']])
-    x_train = _deserialize_array(training_job['x_train'])
-    y_train = _deserialize_array(training_job['y_train'])
+    model.set_weights([deserialize_array(w) for w in training_job['weights']])
+    x_train = deserialize_array(training_job['x_train'])
+    y_train = deserialize_array(training_job['y_train'])
 
     model.fit(x_train, y_train, epochs=training_job['epochs'], callbacks=[callback], verbose=0,
               batch_size=training_job['batch_size'])
