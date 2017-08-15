@@ -1,6 +1,6 @@
-import time
-
 import requests
+import sys
+import time
 import tqdm
 
 from rtrain.utils import serialize_training_job, deserialize_model
@@ -31,22 +31,25 @@ def train(url, model, loss, optimizer, x_train, y_train, epochs, batch_size, qui
 
     if not quiet:
         if notebook:
-            bar = progressbar_type(desc="Training Remotely", total=100.0, unit='%', mininterval=0)
+            bar = progressbar_type(desc="Training Remotely", total=1000.0, unit='‰', mininterval=0)
         else:
-            bar = progressbar_type(desc="Training Remotely", total=100.0, unit='%', mininterval=0,
+            bar = progressbar_type(desc="Training Remotely", total=1000.0, unit='‰', mininterval=0,
                                    bar_format='{desc}{percentage:3.0f}% |{bar}| {elapsed} ({remaining} rem.)')
 
     finished = False
     last_status = 0
     while not finished:
         response = requests.get("%s/status/%s" % (url, job_id))
+        if response.status_code != 200:
+            print("Job not created.", file=sys.stderr)
+            return None
         status = response.json()
         if status.get('error', None) is not None:
             raise IOError(status['error'])
 
         if not quiet:
-            bar.update(int(round(status['status'])) - last_status)
-            last_status = int(round(status['status']))
+            bar.update(int(round(10*status['status'])) - last_status)
+            last_status = int(round(10*status['status']))
 
         finished = status['finished']
         time.sleep(5)
