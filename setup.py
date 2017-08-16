@@ -22,7 +22,7 @@ setup(
     ],
     keywords='deeplearning neuralnetworks',
     packages=find_packages(),
-    install_requires=['flask', 'keras>=2.0.6', 'tensorflow',  'jsonschema', 'numpy', 'requests', 'tqdm'],
+    install_requires=['flask', 'keras>=2.0.6', 'tensorflow-gpu',  'jsonschema', 'numpy', 'requests', 'tqdm'],
     python_requires='>=3',
 
     package_data={
