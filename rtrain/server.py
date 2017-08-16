@@ -96,6 +96,13 @@ def trainer():
             _database_operations.finish_job(job_id, traceback.format_exc(e), database)
 
 
+def cleaner():
+    database = sqlite3.connect(database_path)
+    while True:
+        _database_operations.purge_old_jobs(database)
+        time.sleep(30)
+
+
 @app.route("/train", methods=['POST'])
 def request_training():
     request_content = flask.request.get_json()
@@ -124,8 +131,12 @@ def request_result(job_id):
 
 
 def main():
-    worker = threading.Thread(target=trainer)
-    worker.start()
+    worker_thread = threading.Thread(target=trainer)
+    worker_thread.start()
+
+    cleaner_thread = threading.Thread(target=cleaner)
+    cleaner_thread.start()
+
     app.run()
 
 

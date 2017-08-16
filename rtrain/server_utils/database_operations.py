@@ -27,16 +27,19 @@ __queries = {
     """,
     "update_status": """
         UPDATE Jobs SET
-            status = ?
+            status = ?, modification_time = datetime('now', 'unixepoch')
         WHERE id = ?
         """,
     "finish_job": """
         UPDATE Jobs SET
-            finished = 1, job = ?
+            finished = 1, job = ?, modification_time = datetime('now', 'unixepoch')
         WHERE id = ?
         """,
     "get_results": """
         SELECT job FROM Jobs WHERE finished = 1 AND id = ?
+    """,
+    "purge_jobs": """
+        DELETE FROM Jobs WHERE finished = 1 AND modification_time < datetime('now','unixepoch')-60
     """
 }
 
@@ -109,5 +112,12 @@ def update_status(job_id, percentage, db):
 def finish_job(job_id, result, db):
     cursor = db.cursor()
     cursor.execute(__queries['finish_job'], (result, job_id))
+    cursor.close()
+    db.commit()
+
+
+def purge_old_jobs(db):
+    cursor = db.cursor()
+    cursor.execute(__queries['purge_jobs'])
     cursor.close()
     db.commit()
