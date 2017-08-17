@@ -103,6 +103,11 @@ def cleaner():
         time.sleep(30)
 
 
+@app.route("/ping")
+def ping():
+    return '{}'
+
+
 @app.route("/train", methods=['POST'])
 def request_training():
     request_content = flask.request.get_json()
