@@ -7,6 +7,7 @@ import rtrain.server_utils.database_operations as db
 
 database_path = db.get_database_location()
 
+
 def main():
     connection = sqlite3.connect(database_path)
     if connection is None:
