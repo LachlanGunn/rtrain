@@ -28,6 +28,8 @@ class RTrainSession(object):
 
         if certificate is not None:
             self.verify = certificate
+        else:
+            self.verify = None
 
         self.session.mount("https://", requests_toolbelt.adapters.host_header_ssl.HostHeaderSSLAdapter())
         self.host = tls_host
