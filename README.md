@@ -54,19 +54,19 @@ must not be exposed to outside users under any circumstances.*
 
 ### Setting up the server
 
-We use _SQLite_ to store job data; the database location is stored in the
+We use _SQLAlchemy_ to store job data; the database location is stored in the
 environmental variable `DB_PATH`, and does not need to exist at the time
 of setup.  The database schema is initialised using `rtraind-setup`.  
 
 ```ShellSession
-$ DB_PATH="/path/to/database.sqlite" rtraind-setup
+$ DB_PATH="sqlite:///path/to/database.sqlite" rtraind-setup
 ```
 
 ### Running the daemon
 
 We are now ready to run the daemon:
 ```ShellSession
-$ DB_PATH="/path/to/database.sqlite" rtraind
+$ DB_PATH="sqlite:///path/to/database.sqlite" rtraind
 ```
 As yet there is no `systemd` script, no logging, nor a proper
 configuration file. The listen port cannot yet be changed, however

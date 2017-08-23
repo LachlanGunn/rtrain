@@ -18,9 +18,9 @@ if __name__ == '__main__':
     x_train = numpy.random.randn(100000,2)
     y_train = numpy.matrix(numpy.sqrt(x_train[:,0]**2 + x_train[:,1]**2)).transpose()
 
-    session = rtrain.client.RTrainSession("http://localhost:5000")
+    session = rtrain.client.RTrainSession("http://127.0.0.1:5000", certificate='U:/Source/rtrain-node/rtrain.crt')
     trained_model = session.train(model, 'mean_squared_error', 'rmsprop', x_train, y_train,
-                                        10, 1024)
+                                        10, 256)
     if trained_model is None:
         print("Error training model.", file=sys.stderr)
         sys.exit(1)

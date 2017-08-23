@@ -1,35 +1,25 @@
 #!/usr/bin/env python3
 
-import flask
 import json
-import keras.models
-import sqlite3
 import sys
 import threading
 import time
 import traceback
 
+import flask
+import keras.models
+import sqlalchemy.orm
+
+import rtrain.server_utils.model.database_operations as _database_operations
+import rtrain.server_utils.model
 from rtrain.utils import deserialize_array, serialize_model
-from .validation import validate_training_request
-import rtrain.server_utils.database_operations as _database_operations
+from rtrain.validation import validate_training_request
 
 app = flask.Flask(__name__)
 
-database_path = _database_operations.get_database_location()
-
-
-def get_db():
-    """Get a database context."""
-    if not hasattr(flask.g, 'sqlite_db'):
-        flask.g.sqlite_db = sqlite3.connect(database_path)
-    return flask.g.sqlite_db
-
-
-@app.teardown_appcontext
-def close_db(exception):
-    """Close the database when the application closes."""
-    if hasattr(flask.g, 'sqlite_db'):
-        flask.g.sqlite_db.close()
+engine = sqlalchemy.create_engine(_database_operations.get_database_location())
+session_factory = sqlalchemy.orm.sessionmaker(bind=engine)
+Session = sqlalchemy.orm.scoped_session(session_factory)
 
 
 def extract_training_request(json_data):
@@ -77,29 +67,32 @@ class StatusCallback(keras.callbacks.Callback):
 
 
 def trainer():
-    database = sqlite3.connect(database_path)
+    session = Session()
     while True:
-        next_job = _database_operations.get_next_job(database)
+        next_job = _database_operations.get_next_job(session)
         if next_job is None:
             time.sleep(1)
             continue
 
-        job_id, job = next_job
-        print("Starting job %s" % job_id, file=sys.stderr)
-        training_request = extract_training_request(json.loads(job))
-        callback = StatusCallback(job_id, database)
-        try:
-            result = execute_training_request(training_request, callback)
-            _database_operations.finish_job(job_id, result, database)
-        except Exception as e:
-            _database_operations.update_status(job_id, -1, database)
-            _database_operations.finish_job(job_id, traceback.format_exc(e), database)
+        job = next_job
+        if len(job.training_jobs) == 0:
+            continue
+        print("Starting job %s" % job.id, file=sys.stderr)
+        for tj in job.training_jobs:
+            training_request = extract_training_request(json.loads(tj.training_job))
+            callback = StatusCallback(job.id, session)
+            try:
+                result = execute_training_request(training_request, callback)
+                _database_operations.finish_job(job.id, result, session)
+            except Exception as e:
+                _database_operations.update_status(job.id, -1, session)
+                _database_operations.finish_job(job.id, traceback.format_exc(e), session)
 
 
 def cleaner():
-    database = sqlite3.connect(database_path)
+    session = Session()
     while True:
-        _database_operations.purge_old_jobs(database)
+        _database_operations.purge_old_jobs(session)
         time.sleep(30)
 
 
@@ -114,28 +107,29 @@ def request_training():
     if request_content is None:
         flask.abort(415)
     training_request = extract_training_request(request_content)
-    return _database_operations.create_new_job(training_request, get_db())
+    return _database_operations.create_new_job(training_request, Session())
 
 
 @app.route("/status/<job_id>", methods=['GET'])
 def request_status(job_id):
-    status = _database_operations.get_status(job_id, get_db())
+    status = _database_operations.get_status(job_id.encode('ascii'), Session())
     if status is None:
         flask.abort(404)
     else:
-        return json.dumps({'status': status[0], 'finished': status[1]})
+        return json.dumps({'status': status.status, 'finished': status.finished})
 
 
 @app.route("/result/<job_id>", methods=['GET'])
 def request_result(job_id):
-    status = _database_operations.get_results(job_id, get_db())
-    if status is None:
+    result = _database_operations.get_results(job_id.encode('ascii'), Session())
+    if result is None:
         flask.abort(404)
     else:
-        return status[0]
+        return result
 
 
 def main():
+
     worker_thread = threading.Thread(target=trainer)
     worker_thread.start()
 
