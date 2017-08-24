@@ -28,7 +28,7 @@ class TrainingJob(Base):
     job_id = sa.Column(sa.CHAR(32), sa.ForeignKey('Jobs.id'))
     job = orm.relationship('Job', back_populates='training_jobs')
 
-    training_job = sa.Column(sa.TEXT)
+    training_job = sa.Column(sa.LargeBinary)
     job_checksum = sa.Column(sa.CHAR(64))
 
 
@@ -41,4 +41,4 @@ class TrainingResult(Base):
     job = orm.relationship('Job', back_populates='training_results')
 
     result_type = sa.Column(sa.VARCHAR(16))
-    result = sa.Column(sa.TEXT)
+    result = sa.Column(sa.LargeBinary)

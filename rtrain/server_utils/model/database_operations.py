@@ -29,7 +29,7 @@ def create_new_job(training_request, session):
     digest.update(training_data.encode())
 
     new_job = model.Job(id=job_id, status=0, finished=0, job_type='train')
-    new_training = model.TrainingJob(job=new_job, training_job=training_data,
+    new_training = model.TrainingJob(job=new_job, training_job=training_data.encode('utf8'),
                                      job_checksum=str(base64.b16encode(
                                         digest.digest()), 'ascii'))
     session.add(new_job)
@@ -52,7 +52,7 @@ def get_results(job_id, session):
     if len(job.training_results) == 0:
         return None
     else:
-        return job.training_results[0].result
+        return str(job.training_results[0].result, 'utf8')
 
 
 def update_status(job_id, percentage, session):
@@ -65,7 +65,7 @@ def finish_job(job_id, result, session):
     job = session.query(model.Job).filter_by(id=job_id).first()
     job.finished = 1
 
-    training_result = model.TrainingResult(job_id=job.id, result=result)
+    training_result = model.TrainingResult(job_id=job.id, result=result.encode('utf8'))
     session.add(training_result)
     session.commit()
 

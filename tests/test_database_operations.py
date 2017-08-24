@@ -39,7 +39,7 @@ def test_create_new_job(session):
 
     assert len(job.training_results) == 0
     assert len(job.training_jobs) == 1
-    assert job.training_jobs[0].training_job == '["foobarbaz"]'
+    assert job.training_jobs[0].training_job == b'["foobarbaz"]'
 
 
 def test_update_status(session):
@@ -68,7 +68,7 @@ def test_finish(session):
     result = session.query(model.Job).first()
     assert result.finished == 1
     assert len(result.training_results) == 1
-    assert result.training_results[0].result == 'result'
+    assert result.training_results[0].result == b'result'
 
 
 def test_get_results(session):
