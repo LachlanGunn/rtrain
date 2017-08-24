@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import base64
 import pytest
 import datetime
 
@@ -15,6 +16,12 @@ def session():
     engine = sqlalchemy.create_engine("sqlite:///:memory:")
     model.Base.metadata.create_all(engine)
     return sqlalchemy.orm.Session(bind=engine)
+
+
+def test_create_job_id(session):
+    job_id = ops._create_job_id()
+    assert len(job_id) == 32
+    base64.b32decode(job_id, casefold=True)
 
 
 def test_create_new_job(session):
