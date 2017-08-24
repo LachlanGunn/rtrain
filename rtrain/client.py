@@ -42,6 +42,8 @@ class RTrainSession(object):
         serialized_model = serialize_training_job(model, loss, optimizer, x_train, y_train, epochs, batch_size)
         response = self.session.post("%s/train" % self.url, json=serialized_model,
                                      verify=self.verify, headers={'Host': self.host})
+        if response.status_code != 200:
+            raise Exception('Job not created.')
         job_id = response.text
 
         if not quiet:
