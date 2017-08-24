@@ -15,7 +15,7 @@ def get_database_location():
 
 
 def _create_job_id():
-    job_id = base64.b32encode(os.urandom(20)).lower()
+    job_id = str(base64.b32encode(os.urandom(20)).lower(), 'ascii')
     assert len(job_id) == 32
     return job_id
 
@@ -30,8 +30,8 @@ def create_new_job(training_request, session):
 
     new_job = model.Job(id=job_id, status=0, finished=0, job_type='train')
     new_training = model.TrainingJob(job=new_job, training_job=training_data,
-                                     job_checksum=base64.b16encode(
-                                        digest.digest()))
+                                     job_checksum=str(base64.b16encode(
+                                        digest.digest()), 'ascii'))
     session.add(new_job)
     session.add(new_training)
     session.commit()

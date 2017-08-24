@@ -112,7 +112,7 @@ def request_training():
 
 @app.route("/status/<job_id>", methods=['GET'])
 def request_status(job_id):
-    status = _database_operations.get_status(job_id.encode('ascii'), Session())
+    status = _database_operations.get_status(job_id, Session())
     if status is None:
         flask.abort(404)
     else:
@@ -121,7 +121,7 @@ def request_status(job_id):
 
 @app.route("/result/<job_id>", methods=['GET'])
 def request_result(job_id):
-    result = _database_operations.get_results(job_id.encode('ascii'), Session())
+    result = _database_operations.get_results(job_id, Session())
     if result is None:
         flask.abort(404)
     else:
