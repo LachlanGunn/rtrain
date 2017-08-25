@@ -79,7 +79,8 @@ def trainer():
             continue
         print("Starting job %s" % job.id, file=sys.stderr)
         for tj in job.training_jobs:
-            training_request = extract_training_request(json.loads(tj.training_job))
+            training_data = str(tj.training_job, 'utf8')
+            training_request = extract_training_request(json.loads(training_data))
             callback = StatusCallback(job.id, session)
             try:
                 result = execute_training_request(training_request, callback)

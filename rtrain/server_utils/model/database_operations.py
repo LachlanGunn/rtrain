@@ -29,7 +29,7 @@ def create_new_job(training_request, session):
     digest.update(training_data.encode())
 
     new_job = model.Job(id=job_id, status=0, finished=0, job_type='train')
-    new_training = model.TrainingJob(job=new_job, training_job=training_data.encode('utf8'),
+    new_training = model.TrainingJob(job_id=job_id, training_job=training_data.encode('utf8'),
                                      job_checksum=str(base64.b16encode(
                                         digest.digest()), 'ascii'))
     session.add(new_job)
