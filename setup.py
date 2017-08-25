@@ -26,6 +26,10 @@ setup(
                             'requests-toolbelt', 'tqdm', 'sqlalchemy'],
     python_requires='>=3',
 
+    extras_require={
+      'gpu': 'tensorflow-gpu',
+    },
+
     package_data={
         'rtrain': ['schema.sql'],
     },
