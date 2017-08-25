@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import argparse
+from functools import wraps
 import json
 import sys
 import threading
@@ -10,16 +12,24 @@ import flask
 import keras.models
 import sqlalchemy.orm
 
-import rtrain.server_utils.model.database_operations as _database_operations
+import rtrain.server_utils.config
 import rtrain.server_utils.model
+import rtrain.server_utils.model.database_operations as _database_operations
+
 from rtrain.utils import deserialize_array, serialize_model
 from rtrain.validation import validate_training_request
 
 app = flask.Flask(__name__)
 
-engine = sqlalchemy.create_engine(_database_operations.get_database_location())
-session_factory = sqlalchemy.orm.sessionmaker(bind=engine)
-Session = sqlalchemy.orm.scoped_session(session_factory)
+Session = None
+password = ''
+
+
+def prepare_database(config):
+    global Session
+    engine = sqlalchemy.create_engine(config.db_string)
+    session_factory = sqlalchemy.orm.sessionmaker(bind=engine)
+    Session = sqlalchemy.orm.scoped_session(session_factory)
 
 
 def extract_training_request(json_data):
@@ -40,6 +50,40 @@ def execute_training_request(training_job, callback):
     model.fit(x_train, y_train, epochs=training_job['epochs'], callbacks=[callback], verbose=0,
               batch_size=training_job['batch_size'])
     return serialize_model(model)
+
+
+##########################################################################
+# Based on http://flask.pocoo.org/snippets/8/
+####
+# "This snippet by Armin Ronacher can be used freely for anything you like.
+#  Consider it public domain."
+##########################################################################
+def check_auth(_, http_password):
+    """This function is called to check if a username /
+    password combination is valid.
+    """
+    return password == http_password
+
+
+def authenticate():
+    """Sends a 401 response that enables basic auth"""
+    return flask.Response(
+    'Login required.', 401,
+    {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        global password
+        if password == '':
+            return f(*args, **kwargs)
+        auth = flask.request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
+        return f(*args, **kwargs)
+    return decorated
+##########################################################################
 
 
 class StatusCallback(keras.callbacks.Callback):
@@ -103,6 +147,7 @@ def ping():
 
 
 @app.route("/train", methods=['POST'])
+@requires_auth
 def request_training():
     request_content = flask.request.get_json()
     if request_content is None:
@@ -112,6 +157,7 @@ def request_training():
 
 
 @app.route("/status/<job_id>", methods=['GET'])
+@requires_auth
 def request_status(job_id):
     status = _database_operations.get_status(job_id, Session())
     if status is None:
@@ -121,6 +167,7 @@ def request_status(job_id):
 
 
 @app.route("/result/<job_id>", methods=['GET'])
+@requires_auth
 def request_result(job_id):
     result = _database_operations.get_results(job_id, Session())
     if result is None:
@@ -130,6 +177,24 @@ def request_result(job_id):
 
 
 def main():
+    global password
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--config', default='/etc/rtraind.conf',
+                        help='Path to configuration file.')
+    args = parser.parse_args()
+
+    try:
+        with open(args.config) as config_fh:
+            config = rtrain.server_utils.config.RTrainConfig(config_fh.read())
+    except FileNotFoundError:
+        config = rtrain.server_utils.config.RTrainConfig('')
+    except IOError:
+        print("Could not read configuration file %s" % args.config, file=sys.stderr)
+        sys.exit(1)
+
+    prepare_database(config)
+    password = config.password
 
     worker_thread = threading.Thread(target=trainer)
     worker_thread.start()
