@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
+"""Database setup tool for rtraind."""
 
 import argparse
-import sqlalchemy
 import sys
+
+import sqlalchemy
 
 import rtrain.server_utils.config
 import rtrain.server_utils.model

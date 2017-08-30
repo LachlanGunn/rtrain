@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Configuration parser for rtraind."""
 
 import configparser
 

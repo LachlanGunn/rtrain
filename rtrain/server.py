@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Keras remote-training server."""
 
 import argparse
 from functools import wraps
@@ -36,6 +37,7 @@ logger = structlog.get_logger()
 
 
 def prepare_database(config):
+    """Prepare a database connection given a database string."""
     global Session
     engine = sqlalchemy.create_engine(config.db_string)
     session_factory = sqlalchemy.orm.sessionmaker(bind=engine)
@@ -43,13 +45,15 @@ def prepare_database(config):
 
 
 def extract_training_request(json_data):
+    """Deserialise and validate a training request."""
     if not validate_training_request(json_data):
         return None
-    else:
-        return json_data
+
+    return json_data
 
 
 def execute_training_request(training_job, callback):
+    """Execute a deserialised training request, returning a trained model."""
     model = keras.models.model_from_json(training_job['architecture'])
     model.compile(
         loss=training_job['loss'], optimizer=training_job['optimizer'])
@@ -88,6 +92,8 @@ def authenticate():
 
 
 def requires_auth(f):
+    """A decorator that forces authentication when a password is set."""
+
     @wraps(f)
     def decorated(*args, **kwargs):
         global password
@@ -105,6 +111,8 @@ def requires_auth(f):
 
 
 class StatusCallback(keras.callbacks.Callback):
+    """A callback class to store job status to the database."""
+
     def __init__(self, job_id, db):
         self.db = db
         self.job_id = job_id
@@ -112,10 +120,10 @@ class StatusCallback(keras.callbacks.Callback):
         self.samples_this_epoch = 0
         self.last_update = -1
 
-    def on_epoch_begin(self, epoch, logs={}):
+    def on_epoch_begin(self, epoch, logs=None):
         self.samples_this_epoch = 0
 
-    def on_batch_end(self, batch, logs={}):
+    def on_batch_end(self, batch, logs=None):
         batch_size = logs.get('size', 0)
         self.samples_this_epoch += batch_size
 
@@ -127,11 +135,12 @@ class StatusCallback(keras.callbacks.Callback):
                  self.epochs_finished) / self.params['epochs'], self.db)
             self.last_update = current_time
 
-    def on_epoch_end(self, epoch, logs={}):
+    def on_epoch_end(self, epoch, logs=None):
         self.epochs_finished += 1
 
 
 def trainer():
+    """Thread that performs the actual model training."""
     session = Session()
     log = logger.new()
     while True:
@@ -147,7 +156,7 @@ def trainer():
         job_log = log.bind(job_id=next_job.id)
 
         job = next_job
-        if len(job.training_jobs) == 0:
+        if not job.training_jobs:
             job_log.warn('trainer::job::no_training_job')
             continue
 
@@ -173,6 +182,7 @@ def trainer():
 
 
 def cleaner():
+    """Thread that purges old jobs from the database."""
     session = Session()
     while True:
         _database_operations.purge_old_jobs(session)
@@ -181,12 +191,14 @@ def cleaner():
 
 @app.route("/ping")
 def ping():
+    """Basic health check request."""
     return '{}'
 
 
 @app.route("/train", methods=['POST'])
 @requires_auth
 def request_training():
+    """Request handler for training requests."""
     log = logger.new()
     request_content = flask.request.get_json()
     if request_content is None:
@@ -206,6 +218,7 @@ def request_training():
 @app.route("/status/<job_id>", methods=['GET'])
 @requires_auth
 def request_status(job_id):
+    """Handler for job status requests."""
     status = _database_operations.get_status(job_id, Session())
     if status is None:
         flask.abort(404)
@@ -219,6 +232,7 @@ def request_status(job_id):
 @app.route("/result/<job_id>", methods=['GET'])
 @requires_auth
 def request_result(job_id):
+    """Handler for job result downloads."""
     result = _database_operations.get_results(job_id, Session())
     if result is None:
         flask.abort(404)

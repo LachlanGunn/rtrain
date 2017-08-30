@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Client for remote training of Keras models."""
+
 import requests
 import requests_toolbelt.adapters.host_header_ssl
 import sys
@@ -22,7 +25,12 @@ def set_notebook(in_notebook):
 
 
 class RTrainSession(object):
+    """Represent a session with a remote server.
+
+    Session is something of a misnomer here as the protocol is stateless."""
+
     def __init__(self, url, certificate=None, tls_host='rtraind'):
+        """Prepare to connect to a remote-training server."""
         self.url = url
         self.session = requests.Session()
 

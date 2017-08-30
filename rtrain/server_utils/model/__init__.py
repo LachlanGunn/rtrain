@@ -8,6 +8,7 @@ Base = sqlalchemy.ext.declarative.declarative_base()
 
 
 class Job(Base):
+    """Represent a job in the database."""
     __tablename__ = 'Jobs'
 
     id = sa.Column(sa.CHAR(32), primary_key=True)
@@ -23,6 +24,7 @@ class Job(Base):
 
 
 class TrainingJob(Base):
+    """Represent a training job in the database."""
     __tablename__ = 'TrainingJobs'
 
     id = sa.Column(sa.INT, primary_key=True)
@@ -35,6 +37,7 @@ class TrainingJob(Base):
 
 
 class TrainingResult(Base):
+    """Represent the result of a job in the database."""
     __tablename__ = 'TrainingResult'
 
     id = sa.Column(sa.INT, primary_key=True)
