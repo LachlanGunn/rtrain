@@ -27,8 +27,10 @@ def test_validation():
         "mean_squared_error",
         "optimizer":
         "rmsprop",
-        "x_train": "more array",
-        "y_train": "more array",
+        "x_train":
+        "more array",
+        "y_train":
+        "more array",
         "x_train_shape": [3],
         "y_train_shape": [3],
         "epochs":

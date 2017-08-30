@@ -28,12 +28,18 @@ import rtrain.server_utils.model.database_operations as _database_operations
 from rtrain.utils import deserialize_array, serialize_model
 from rtrain.validation import validate_training_request
 
-app = flask.Flask(__name__)
+rtraind_blueprint = flask.Blueprint('rtraind', __name__)
 
 Session = None
 password = None
 
 logger = structlog.get_logger()
+
+
+def create_app(config):
+    app = flask.Flask(__name__)
+    app.register_blueprint(rtraind_blueprint)
+    return app
 
 
 def prepare_database(config):
@@ -97,7 +103,7 @@ def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         global password
-        if password is not None:
+        if password is None:
             return f(*args, **kwargs)
         auth = flask.request.authorization
         if not auth or not check_auth(auth.username, auth.password):
@@ -189,13 +195,13 @@ def cleaner():
         time.sleep(30)
 
 
-@app.route("/ping")
+@rtraind_blueprint.route("/ping")
 def ping():
     """Basic health check request."""
     return '{}'
 
 
-@app.route("/train", methods=['POST'])
+@rtraind_blueprint.route("/train", methods=['POST'])
 @requires_auth
 def request_training():
     """Request handler for training requests."""
@@ -215,7 +221,7 @@ def request_training():
     return job_id
 
 
-@app.route("/status/<job_id>", methods=['GET'])
+@rtraind_blueprint.route("/status/<job_id>", methods=['GET'])
 @requires_auth
 def request_status(job_id):
     """Handler for job status requests."""
@@ -229,7 +235,7 @@ def request_status(job_id):
         })
 
 
-@app.route("/result/<job_id>", methods=['GET'])
+@rtraind_blueprint.route("/result/<job_id>", methods=['GET'])
 @requires_auth
 def request_result(job_id):
     """Handler for job result downloads."""
@@ -273,6 +279,7 @@ def main():
     cleaner_thread = threading.Thread(target=cleaner)
     cleaner_thread.start()
 
+    app = create_app(config)
     app.run()
 
 
