@@ -1,18 +1,32 @@
 #!/usr/bin/env python3
 
+import argparse
 import sqlalchemy
 import sys
 
-import pkg_resources
-
+import rtrain.server_utils.config
 import rtrain.server_utils.model
-import rtrain.server_utils.model.database_operations as db
-
-database_path = db.get_database_location()
-engine = sqlalchemy.create_engine(database_path)
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-c',
+        '--config',
+        default='/etc/rtraind.conf',
+        help='Path to configuration file.')
+
+    args = parser.parse_args()
+    try:
+        with open(args.config) as config_fh:
+            config = rtrain.server_utils.config.RTrainConfig(config_fh.read())
+    except FileNotFoundError:
+        config = rtrain.server_utils.config.RTrainConfig('')
+    except IOError:
+        print("Failed to load config file.")
+        sys.exit(1)
+
+    engine = sqlalchemy.create_engine(config.db_string)
     rtrain.server_utils.model.Base.metadata.create_all(engine)
 
 
