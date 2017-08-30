@@ -16,8 +16,10 @@ class Job(Base):
     status = sa.Column(sa.REAL)
     finished = sa.Column(sa.INTEGER)
     job_type = sa.Column(sa.VARCHAR(16))
-    training_jobs = orm.relationship('TrainingJob', cascade='all, delete-orphan')
-    training_results = orm.relationship('TrainingResult', cascade='all, delete-orphan')
+    training_jobs = orm.relationship(
+        'TrainingJob', cascade='all, delete-orphan')
+    training_results = orm.relationship(
+        'TrainingResult', cascade='all, delete-orphan')
 
 
 class TrainingJob(Base):

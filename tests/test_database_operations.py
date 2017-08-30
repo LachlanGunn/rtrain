@@ -35,7 +35,8 @@ def test_create_new_job(session):
     assert job.status == 0.0
     assert job.finished == 0
 
-    assert abs(job.creation_time - datetime.datetime.utcnow()) < datetime.timedelta(minutes=1)
+    assert abs(job.creation_time -
+               datetime.datetime.utcnow()) < datetime.timedelta(minutes=1)
 
     assert len(job.training_results) == 0
     assert len(job.training_jobs) == 1
@@ -86,18 +87,21 @@ def test_purge(session):
     job_id_2 = ops.create_new_job([], session)
     ops.finish_job(job_id_2, 'result', session)
     job_2 = session.query(model.Job).filter_by(id=job_id_2).first()
-    job_2.modification_time = datetime.datetime.utcnow() - datetime.timedelta(hours=2)
+    job_2.modification_time = datetime.datetime.utcnow() - datetime.timedelta(
+        hours=2)
     session.commit()
 
     job_id_3 = ops.create_new_job([], session)
     job_2 = session.query(model.Job).filter_by(id=job_id_3).first()
-    job_2.modification_time = datetime.datetime.utcnow() - datetime.timedelta(hours=2)
+    job_2.modification_time = datetime.datetime.utcnow() - datetime.timedelta(
+        hours=2)
     session.commit()
 
     job_id_4 = ops.create_new_job([], session)
     ops.finish_job(job_id_4, 'result', session)
     job_4 = session.query(model.Job).filter_by(id=job_id_4).first()
-    job_4.modification_time = datetime.datetime.utcnow() + datetime.timedelta(hours=2)
+    job_4.modification_time = datetime.datetime.utcnow() + datetime.timedelta(
+        hours=2)
     session.commit()
 
     ops.purge_old_jobs(session)
@@ -117,18 +121,21 @@ def test_get_next_job(session):
     job_id_2 = ops.create_new_job([], session)
     ops.finish_job(job_id_2, 'result', session)
     job_2 = session.query(model.Job).filter_by(id=job_id_2).first()
-    job_2.creation_time = datetime.datetime.utcnow() - datetime.timedelta(hours=2)
+    job_2.creation_time = datetime.datetime.utcnow() - datetime.timedelta(
+        hours=2)
     session.commit()
 
     job_id_3 = ops.create_new_job([], session)
     job_2 = session.query(model.Job).filter_by(id=job_id_3).first()
-    job_2.creation_time = datetime.datetime.utcnow() - datetime.timedelta(hours=2)
+    job_2.creation_time = datetime.datetime.utcnow() - datetime.timedelta(
+        hours=2)
     session.commit()
 
     job_id_4 = ops.create_new_job([], session)
     ops.finish_job(job_id_4, 'result', session)
     job_4 = session.query(model.Job).filter_by(id=job_id_4).first()
-    job_4.creation_time = datetime.datetime.utcnow() + datetime.timedelta(hours=2)
+    job_4.creation_time = datetime.datetime.utcnow() + datetime.timedelta(
+        hours=2)
     session.commit()
 
     job = ops.get_next_job(session)

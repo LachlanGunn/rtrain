@@ -36,15 +36,23 @@ def deserialize_model(model_json):
     return model
 
 
-def serialize_training_job(model, loss, optimizer, x_train, y_train, epochs, batch_size):
+def serialize_training_job(model, loss, optimizer, x_train, y_train, epochs,
+                           batch_size):
     architecture = model.to_json()
     weights = model.get_weights()
 
     # We need to convert the arrays to strings
     weights_serialized = [serialize_array(w) for w in weights]
 
-    return ({'architecture': architecture, 'weights': weights_serialized,
-             'loss': loss, 'optimizer': optimizer,
-             'x_train': serialize_array(x_train), 'y_train': serialize_array(y_train),
-             'x_train_shape': x_train.shape, 'y_train_shape': y_train.shape,
-             'epochs': epochs, 'batch_size': batch_size})
+    return ({
+        'architecture': architecture,
+        'weights': weights_serialized,
+        'loss': loss,
+        'optimizer': optimizer,
+        'x_train': serialize_array(x_train),
+        'y_train': serialize_array(y_train),
+        'x_train_shape': x_train.shape,
+        'y_train_shape': y_train.shape,
+        'epochs': epochs,
+        'batch_size': batch_size
+    })
