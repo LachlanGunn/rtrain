@@ -3,14 +3,22 @@
 import argparse
 from functools import wraps
 import json
+import logging
+import os
 import sys
 import threading
 import time
 import traceback
 
+# Tell TensorFlow to be quiet.
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 import flask
 import keras.models
 import sqlalchemy.orm
+
+import structlog
+import structlog.stdlib
 
 import rtrain.server_utils.config
 import rtrain.server_utils.model
@@ -23,6 +31,8 @@ app = flask.Flask(__name__)
 
 Session = None
 password = ''
+
+logger = structlog.get_logger()
 
 
 def prepare_database(config):
@@ -123,17 +133,28 @@ class StatusCallback(keras.callbacks.Callback):
 
 def trainer():
     session = Session()
+    log = logger.new()
     while True:
-        next_job = _database_operations.get_next_job(session)
-        if next_job is None:
-            time.sleep(1)
-            continue
+        log.debug('trainer::job::wait_for_next')
+        while True:
+            next_job = _database_operations.get_next_job(session)
+            if next_job is None:
+                time.sleep(1)
+                continue
+            else:
+                break
+
+        job_log = log.bind(job_id=next_job.id)
 
         job = next_job
         if len(job.training_jobs) == 0:
+            job_log.warn('trainer::job::no_training_job')
             continue
-        print("Starting job %s" % job.id, file=sys.stderr)
-        for tj in job.training_jobs:
+
+        job_log.info('trainer::job::job_start')
+        for i, tj in enumerate(job.training_jobs):
+            subjob_log = job_log.bind(subjob_type='training', subjob=i)
+            subjob_log.info('trainer::job::subjob_start')
             training_data = str(tj.training_job, 'utf8')
             training_request = extract_training_request(
                 json.loads(training_data))
@@ -142,10 +163,13 @@ def trainer():
                 result = execute_training_request(training_request, callback)
                 _database_operations.finish_job(job.id, result, session)
             except Exception as e:
+                subjob_log.error('trainer::job::error', exc_info=True)
                 _database_operations.update_status(job.id, -1, session)
                 _database_operations.finish_job(job.id,
                                                 traceback.format_exc(e),
                                                 session)
+            subjob_log.info('trainer::job::subjob_finished')
+        job_log.info('trainer::job::job_finished')
 
 
 def cleaner():
@@ -163,11 +187,20 @@ def ping():
 @app.route("/train", methods=['POST'])
 @requires_auth
 def request_training():
+    log = logger.new()
     request_content = flask.request.get_json()
     if request_content is None:
+        log.error('frontend::train_request::invalid_json')
         flask.abort(415)
+
     training_request = extract_training_request(request_content)
-    return _database_operations.create_new_job(training_request, Session())
+    if training_request is None:
+        log.error('frontend::train_request::invalid_request')
+        flask.abort(400)
+
+    job_id = _database_operations.create_new_job(training_request, Session())
+    log.info('frontend::train_request::request_training', job_id=job_id)
+    return job_id
 
 
 @app.route("/status/<job_id>", methods=['GET'])
@@ -204,15 +237,35 @@ def main():
         help='Path to configuration file.')
     args = parser.parse_args()
 
+    # logging.basicConfig(stream=sys.stdout)
+    # structlog.configure(
+    #     processors=[
+    #         structlog.stdlib.filter_by_level,
+    #         structlog.stdlib.add_logger_name,
+    #         structlog.stdlib.add_log_level,
+    #         structlog.stdlib.PositionalArgumentsFormatter(),
+    #         structlog.processors.StackInfoRenderer(),
+    #         structlog.processors.format_exc_info,
+    #         structlog.processors.UnicodeDecoder(),
+    #         structlog.stdlib.render_to_log_kwargs,
+    #     ],
+    #     context_class=dict,
+    #     logger_factory=structlog.stdlib.LoggerFactory(),
+    #     wrapper_class=structlog.stdlib.BoundLogger,
+    #     cache_logger_on_first_use=True,
+    # )
+
+    log = logger.new()
+
     try:
         with open(args.config) as config_fh:
             config = rtrain.server_utils.config.RTrainConfig(config_fh.read())
     except FileNotFoundError:
+        log.warn(
+            'startup::config_file::file_not_found', config_file=args.config)
         config = rtrain.server_utils.config.RTrainConfig('')
     except IOError:
-        print(
-            "Could not read configuration file %s" % args.config,
-            file=sys.stderr)
+        log.fatal("startup::config_file::read_failed", config_file=args.config)
         sys.exit(1)
 
     prepare_database(config)

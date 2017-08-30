@@ -23,15 +23,11 @@ setup(
     keywords='deeplearning neuralnetworks',
     packages=find_packages(),
     install_requires=['flask', 'keras>=2.0.6', 'tensorflow',  'jsonschema', 'numpy', 'requests',
-                            'requests-toolbelt', 'tqdm', 'sqlalchemy'],
+                            'requests-toolbelt', 'structlog', 'tqdm', 'sqlalchemy'],
     python_requires='>=3',
 
     extras_require={
       'gpu': 'tensorflow-gpu',
-    },
-
-    package_data={
-        'rtrain': ['schema.sql'],
     },
 
     entry_points={
