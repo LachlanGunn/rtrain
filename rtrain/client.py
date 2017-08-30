@@ -77,16 +77,26 @@ class RTrainSession(object):
                     '{desc}{percentage:3.0f}% |{bar}| {elapsed} ({remaining} rem.)'
                 )
 
+        time.sleep(2)
+
         finished = False
         last_status = 0
+        failures = 0
+        wait_time = 2
         while not finished:
             response = self.session.get(
                 "%s/status/%s" % (self.url, job_id),
                 verify=self.verify,
                 headers={'Host': self.host})
             if response.status_code != 200:
-                print("Job not created.", file=sys.stderr)
+                print("Status check failed.", file=sys.stderr)
+
+                time.sleep(wait_time)
+                failures += 1
+                wait_time *= 2
+
                 return None
+
             status = response.json()
             if status.get('error', None) is not None:
                 raise IOError(status['error'])
