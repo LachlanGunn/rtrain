@@ -41,14 +41,20 @@ def extract_training_request(json_data):
 
 def execute_training_request(training_job, callback):
     model = keras.models.model_from_json(training_job['architecture'])
-    model.compile(loss=training_job['loss'], optimizer=training_job['optimizer'])
+    model.compile(
+        loss=training_job['loss'], optimizer=training_job['optimizer'])
 
     model.set_weights([deserialize_array(w) for w in training_job['weights']])
     x_train = deserialize_array(training_job['x_train'])
     y_train = deserialize_array(training_job['y_train'])
 
-    model.fit(x_train, y_train, epochs=training_job['epochs'], callbacks=[callback], verbose=0,
-              batch_size=training_job['batch_size'])
+    model.fit(
+        x_train,
+        y_train,
+        epochs=training_job['epochs'],
+        callbacks=[callback],
+        verbose=0,
+        batch_size=training_job['batch_size'])
     return serialize_model(model)
 
 
@@ -67,9 +73,8 @@ def check_auth(_, http_password):
 
 def authenticate():
     """Sends a 401 response that enables basic auth"""
-    return flask.Response(
-    'Login required.', 401,
-    {'WWW-Authenticate': 'Basic realm="Login Required"'})
+    return flask.Response('Login required.', 401,
+                          {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
 
 def requires_auth(f):
@@ -82,7 +87,10 @@ def requires_auth(f):
         if not auth or not check_auth(auth.username, auth.password):
             return authenticate()
         return f(*args, **kwargs)
+
     return decorated
+
+
 ##########################################################################
 
 
@@ -103,7 +111,10 @@ class StatusCallback(keras.callbacks.Callback):
 
         current_time = time.time()
         if current_time - self.last_update > 0.5:
-            _database_operations.update_status(self.job_id, 100.0 * (float(self.samples_this_epoch)/self.params['samples'] + self.epochs_finished) / self.params['epochs'], self.db)
+            _database_operations.update_status(
+                self.job_id, 100.0 *
+                (float(self.samples_this_epoch) / self.params['samples'] +
+                 self.epochs_finished) / self.params['epochs'], self.db)
             self.last_update = current_time
 
     def on_epoch_end(self, epoch, logs={}):
@@ -124,14 +135,17 @@ def trainer():
         print("Starting job %s" % job.id, file=sys.stderr)
         for tj in job.training_jobs:
             training_data = str(tj.training_job, 'utf8')
-            training_request = extract_training_request(json.loads(training_data))
+            training_request = extract_training_request(
+                json.loads(training_data))
             callback = StatusCallback(job.id, session)
             try:
                 result = execute_training_request(training_request, callback)
                 _database_operations.finish_job(job.id, result, session)
             except Exception as e:
                 _database_operations.update_status(job.id, -1, session)
-                _database_operations.finish_job(job.id, traceback.format_exc(e), session)
+                _database_operations.finish_job(job.id,
+                                                traceback.format_exc(e),
+                                                session)
 
 
 def cleaner():
@@ -163,7 +177,10 @@ def request_status(job_id):
     if status is None:
         flask.abort(404)
     else:
-        return json.dumps({'status': status.status, 'finished': status.finished})
+        return json.dumps({
+            'status': status.status,
+            'finished': status.finished
+        })
 
 
 @app.route("/result/<job_id>", methods=['GET'])
@@ -180,8 +197,11 @@ def main():
     global password
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', default='/etc/rtraind.conf',
-                        help='Path to configuration file.')
+    parser.add_argument(
+        '-c',
+        '--config',
+        default='/etc/rtraind.conf',
+        help='Path to configuration file.')
     args = parser.parse_args()
 
     try:
@@ -190,7 +210,9 @@ def main():
     except FileNotFoundError:
         config = rtrain.server_utils.config.RTrainConfig('')
     except IOError:
-        print("Could not read configuration file %s" % args.config, file=sys.stderr)
+        print(
+            "Could not read configuration file %s" % args.config,
+            file=sys.stderr)
         sys.exit(1)
 
     prepare_database(config)
