@@ -12,7 +12,6 @@ import rtrain.server_utils.model as model
 
 def _create_job_id():
     job_id = str(base64.b32encode(os.urandom(20)).lower(), 'ascii')
-    assert len(job_id) == 32
     return job_id
 
 

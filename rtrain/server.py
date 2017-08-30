@@ -30,7 +30,7 @@ from rtrain.validation import validate_training_request
 app = flask.Flask(__name__)
 
 Session = None
-password = ''
+password = None
 
 logger = structlog.get_logger()
 
@@ -78,7 +78,7 @@ def check_auth(_, http_password):
     """This function is called to check if a username /
     password combination is valid.
     """
-    return password == http_password
+    return (password is not None) and (password == http_password)
 
 
 def authenticate():
@@ -91,7 +91,7 @@ def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         global password
-        if password == '':
+        if password is not None:
             return f(*args, **kwargs)
         auth = flask.request.authorization
         if not auth or not check_auth(auth.username, auth.password):
