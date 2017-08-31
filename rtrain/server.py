@@ -51,7 +51,7 @@ def prepare_database(config):
 
 
 def extract_training_request(json_data):
-    """Deserialise and validate a training request."""
+    """Validate a training request."""
     if not validate_training_request(json_data):
         return None
 
