@@ -60,22 +60,26 @@ def test_status_fail_badjob(client, monkeypatch):
     monkeypatch.setattr(
         'rtrain.server_utils.model.database_operations.get_status',
         lambda x, y: None)
-    result = client.get(flask.url_for('rtraind.request_status', job_id='not_a_real_id'))
+    result = client.get(
+        flask.url_for('rtraind.request_status', job_id='not_a_real_id'))
     assert result.status_code == 404
 
 
 def test_status_success(client, monkeypatch):
     class Status(object):
         """Class to replace the SQLAlchemy model object."""
+
         def __init__(self, status, finished):
             self.status = status
             self.finished = finished
 
         def test_func(self, test_job_id):
             """Return a stub function for get_status that checks job_id."""
+
             def f(job_id, _):
                 assert job_id == test_job_id
                 return self
+
             return f
 
     # Stub out the database.
@@ -85,7 +89,8 @@ def test_status_success(client, monkeypatch):
     monkeypatch.setattr(
         'rtrain.server_utils.model.database_operations.get_status',
         Status(3.14159, False).test_func('a_real_id'))
-    result = client.get(flask.url_for('rtraind.request_status', job_id='a_real_id'))
+    result = client.get(
+        flask.url_for('rtraind.request_status', job_id='a_real_id'))
     assert result.status_code == 200
     assert result.json == {'status': 3.14159, 'finished': False}
 
@@ -93,7 +98,8 @@ def test_status_success(client, monkeypatch):
     monkeypatch.setattr(
         'rtrain.server_utils.model.database_operations.get_status',
         Status(2.71, True).test_func('another_real_id'))
-    result = client.get(flask.url_for('rtraind.request_status', job_id='another_real_id'))
+    result = client.get(
+        flask.url_for('rtraind.request_status', job_id='another_real_id'))
     assert result.status_code == 200
     assert result.json == {'status': 2.71, 'finished': True}
 
@@ -106,13 +112,13 @@ def test_results_badjob(client, monkeypatch):
         def check_job_id(job_id, _):
             assert job_id == desired_job_id
             return None
+
         return check_job_id
 
     # Mock the database call to return a failure.
     monkeypatch.setattr(
         'rtrain.server_utils.model.database_operations.get_results',
-        get_check_job_id('not_a_real_id'),
-    )
+        get_check_job_id('not_a_real_id'), )
 
     result = client.get(
         flask.url_for('rtraind.request_result', job_id='not_a_real_id'))
@@ -129,7 +135,6 @@ def test_results_success(client, monkeypatch):
 
         def get_check_job_id(desired_job_id):
             def check_job_id(internal_job_id, _):
-                print(internal_job_id)
                 assert internal_job_id == desired_job_id
                 return result
 
@@ -138,8 +143,7 @@ def test_results_success(client, monkeypatch):
         # Mock the database call to return the desired value.
         monkeypatch.setattr(
             'rtrain.server_utils.model.database_operations.get_results',
-            get_check_job_id(job_id),
-        )
+            get_check_job_id(job_id))
 
         # Run the function under test.
         response = client.get(

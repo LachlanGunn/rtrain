@@ -80,6 +80,13 @@ def test_get_results(session):
     assert result == 'result'
 
 
+def test_get_results_not_available(session):
+    job_id = ops.create_new_job([], session)
+
+    result = ops.get_results(job_id, session)
+    assert result is None
+
+
 def test_purge(session):
     job_id_1 = ops.create_new_job([], session)
     ops.finish_job(job_id_1, 'result', session)
