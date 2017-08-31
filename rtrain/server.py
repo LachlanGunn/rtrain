@@ -11,9 +11,6 @@ import threading
 import time
 import traceback
 
-# Tell TensorFlow to be quiet.
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
 import flask
 import keras.models
 import sqlalchemy.orm
@@ -34,6 +31,9 @@ Session = None
 password = None
 
 logger = structlog.get_logger()
+
+# Tell TensorFlow to be quiet.
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 def create_app(config):
