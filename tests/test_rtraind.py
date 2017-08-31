@@ -92,7 +92,8 @@ def test_status_success(client, monkeypatch):
     result = client.get(
         flask.url_for('rtraind.request_status', job_id='a_real_id'))
     assert result.status_code == 200
-    assert result.json == {'status': 3.14159, 'finished': False}
+    assert result.json['status'] == 3.14159
+    assert not result.json['finished']
 
     # Test with another value to make sure it isn't just a constant function.
     monkeypatch.setattr(
@@ -101,7 +102,8 @@ def test_status_success(client, monkeypatch):
     result = client.get(
         flask.url_for('rtraind.request_status', job_id='another_real_id'))
     assert result.status_code == 200
-    assert result.json == {'status': 2.71, 'finished': True}
+    assert result.json['status'] == 2.71
+    assert result.json['finished']
 
 
 def test_results_badjob(client, monkeypatch):
