@@ -37,8 +37,11 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 def create_app(config):
+    global password
+
     app = flask.Flask(__name__)
     app.register_blueprint(rtraind_blueprint)
+    password = config.password
     return app
 
 
@@ -103,7 +106,7 @@ def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         global password
-        if password is None:
+        if not password:
             return f(*args, **kwargs)
         auth = flask.request.authorization
         if not auth or not check_auth(auth.username, auth.password):
@@ -271,7 +274,6 @@ def main():
         sys.exit(1)
 
     prepare_database(config)
-    password = config.password
 
     worker_thread = threading.Thread(target=trainer)
     worker_thread.start()

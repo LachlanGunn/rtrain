@@ -4,13 +4,19 @@ import flask
 import pytest
 
 import rtrain.server
+import rtrain.server_utils
 import rtrain.server_utils.model.database_operations
 import rtrain.utils
 
 
 @pytest.fixture
 def app():
-    return rtrain.server.create_app(None)
+    return rtrain.server.create_app(rtrain.server_utils.config.RTrainConfig(
+        """[rtraind]
+        Database=
+        Password=
+        """
+    ))
 
 
 def test_ping(client):
