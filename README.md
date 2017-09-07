@@ -31,7 +31,7 @@ Install _rtrain_ using `pip` or `pip3` depending on your Python
 environment:
 
 ```ShellSession
-rtrain$ pip3 install git+https://github.com/LachlanGunn/rtrain
+$ pip3 install git+https://github.com/LachlanGunn/rtrain
 ``` 
 
 This will install the `rtrain` Python module, as well as the server-side
@@ -46,31 +46,55 @@ its database.
 
 ***Always use an SSH tunnel or similar to communicate with `rtraind`.***
 
-*There is currently no
-authentication or encryption, and I do not know for certain that a
-_Keras_ model cannot be used to execute arbitrary code&mdash;features
-like user-defined layer types make this likely&mdash;and thus `rtraind`
-must not be exposed to outside users under any circumstances.*
+*A _Keras_ model can be used to execute arbitrary code, and thus
+`rtraind` must not be exposed to outside users under any
+circumstances.*
+
+There are two main ways to do this:
+ * *SSH tunnelling.*  This is easiest and handles authentication as
+    well.
+ * *TLS+password authentication.*  This requires a TLS-supporting
+    reverse proxy.  Authentication is provided by the `Password`
+    option in the configuration file.
+
+In either case, until a sandboxing mechanism  is in place, it is safest
+to assume that all authenticated users can see each others data if
+they so desire.
 
 ### Setting up the server
 
 We use _SQLAlchemy_ to store job data; the database location is stored in the
-environmental variable `DB_PATH`, and does not need to exist at the time
-of setup.  The database schema is initialised using `rtraind-setup`.  
+configuration file `/etc/rtraind.conf`, and does not need to exist at the time
+of setup.  The database schema is initialised using `rtraind-setup`.
 
+The configuration file looks as follows:
+
+```ini
+[rtraind]
+Database=sqlite:///path/to/database.sqlite
+Password=YouCanLeaveMeBlankToDisableAuthentication
+```
+and should be placed at `/etc/rtraind.conf`.  Then, we can run `rtraind-setup`,
 ```ShellSession
-$ DB_PATH="sqlite:///path/to/database.sqlite" rtraind-setup
+$ rtraind-setup
+```
+which will initialise the database.  If the config file is at another
+location, use the `-c` or `--config` options:
+```ShellSession
+$ rtraind-setup -c /path/to/config
+$ rtraind-setup --config /path/to/config
 ```
 
 ### Running the daemon
 
 We are now ready to run the daemon:
 ```ShellSession
-$ DB_PATH="sqlite:///path/to/database.sqlite" rtraind
+$ rtraind
 ```
 As yet there is no `systemd` script, no logging, nor a proper
-configuration file. The listen port cannot yet be changed, however
-by default `rtraind` will listen on port 5000.
+configuration file. The listen port cannot yet be changed, and defaults
+to port 5000.  You should use a reverse proxy; this allows for TLS support
+as well.
 
 ### Sending jobs
 
