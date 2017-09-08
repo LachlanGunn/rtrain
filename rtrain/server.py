@@ -180,11 +180,11 @@ def trainer():
             try:
                 result = execute_training_request(training_request, callback)
                 _database_operations.finish_job(job.id, result, session)
-            except Exception as e:
+            except:
                 subjob_log.error('trainer::job::error', exc_info=True)
                 _database_operations.update_status(job.id, -1, session)
                 _database_operations.finish_job(job.id,
-                                                traceback.format_exc(e),
+                                                traceback.format_exc(),
                                                 session)
             subjob_log.info('trainer::job::subjob_finished')
         job_log.info('trainer::job::job_finished')
