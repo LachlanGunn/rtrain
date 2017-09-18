@@ -18,9 +18,9 @@ class Job(Base):
     finished = sa.Column(sa.INTEGER)
     job_type = sa.Column(sa.VARCHAR(16))
     training_jobs = orm.relationship(
-        'TrainingJob', cascade='all, delete-orphan')
+        'TrainingJob', cascade='all,delete,delete-orphan')
     training_results = orm.relationship(
-        'TrainingResult', cascade='all, delete-orphan')
+        'TrainingResult', cascade='all,delete,delete-orphan')
 
 
 class TrainingJob(Base):
@@ -38,7 +38,7 @@ class TrainingJob(Base):
 
 class TrainingResult(Base):
     """Represent the result of a job in the database."""
-    __tablename__ = 'TrainingResult'
+    __tablename__ = 'TrainingResults'
 
     id = sa.Column(sa.INT, primary_key=True)
 
