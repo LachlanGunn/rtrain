@@ -18,9 +18,13 @@ class Job(Base):
     finished = sa.Column(sa.INTEGER)
     job_type = sa.Column(sa.VARCHAR(16))
     training_jobs = orm.relationship(
-        'TrainingJob', cascade='all,delete,delete-orphan')
+        'TrainingJob',
+        cascade='all,delete,delete-orphan',
+        passive_deletes=True)
     training_results = orm.relationship(
-        'TrainingResult', cascade='all,delete,delete-orphan')
+        'TrainingResult',
+        cascade='all,delete,delete-orphan',
+        passive_deletes=True)
 
 
 class TrainingJob(Base):
@@ -29,7 +33,8 @@ class TrainingJob(Base):
 
     id = sa.Column(sa.INT, primary_key=True)
 
-    job_id = sa.Column(sa.CHAR(32), sa.ForeignKey('Jobs.id'))
+    job_id = sa.Column(
+        sa.CHAR(32), sa.ForeignKey('Jobs.id', ondelete='CASCADE'))
     job = orm.relationship('Job', back_populates='training_jobs')
 
     training_job = sa.Column(sa.LargeBinary)
@@ -42,7 +47,8 @@ class TrainingResult(Base):
 
     id = sa.Column(sa.INT, primary_key=True)
 
-    job_id = sa.Column(sa.CHAR(32), sa.ForeignKey('Jobs.id'))
+    job_id = sa.Column(
+        sa.CHAR(32), sa.ForeignKey('Jobs.id', ondelete='CASCADE'))
     job = orm.relationship('Job', back_populates='training_results')
 
     result_type = sa.Column(sa.VARCHAR(16))
