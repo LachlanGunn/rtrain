@@ -63,13 +63,22 @@ def test_get_status(session):
 
 
 def test_finish(session):
+    modification_time = datetime.datetime.utcnow()
+
     job_id = ops.create_new_job([], session)
+    job = session.query(model.Job).filter_by(id=job_id).first()
+    job.modification_time = datetime.datetime.utcnow() - datetime.timedelta(
+        hours=2)
+    session.commit()
+
     ops.finish_job(job_id, 'result', session)
 
     result = session.query(model.Job).first()
     assert result.finished == 1
     assert len(result.training_results) == 1
     assert result.training_results[0].result == b'result'
+    assert abs(result.modification_time - modification_time) \
+           < datetime.timedelta(seconds=10)
 
 
 def test_get_results(session):
@@ -99,8 +108,8 @@ def test_purge(session):
     session.commit()
 
     job_id_3 = ops.create_new_job([], session)
-    job_2 = session.query(model.Job).filter_by(id=job_id_3).first()
-    job_2.modification_time = datetime.datetime.utcnow() - datetime.timedelta(
+    job_3 = session.query(model.Job).filter_by(id=job_id_3).first()
+    job_3.modification_time = datetime.datetime.utcnow() - datetime.timedelta(
         hours=2)
     session.commit()
 

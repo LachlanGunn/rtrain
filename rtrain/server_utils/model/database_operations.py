@@ -62,6 +62,7 @@ def update_status(job_id, percentage, session):
     """Update the status of a job in the database."""
     job = session.query(model.Job).filter_by(id=job_id).first()
     job.status = percentage
+    job.modification_time = datetime.datetime.utcnow()
     session.commit()
 
 
@@ -69,6 +70,7 @@ def finish_job(job_id, result, session):
     """Mark a training job as finished in the database."""
     job = session.query(model.Job).filter_by(id=job_id).first()
     job.finished = 1
+    job.modification_time = datetime.datetime.utcnow()
 
     training_result = model.TrainingResult(
         job_id=job.id, result=result.encode('utf8'))
